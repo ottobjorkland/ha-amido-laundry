@@ -1,18 +1,40 @@
 # Amido laundry booking card for Home Assistant
 
-Book your building's **laundry rooms and saunas** straight from a Home Assistant dashboard – tap a time to
-book, tap your own time to cancel. Built for tenants whose landlord's portal forwards to an **Amido
-"KundPortal"** booking system (known to work: a Swedish landlord's "Mina sidor" → booking).
+**Book your building's laundry room or sauna with one tap – right from your Home Assistant dashboard.**
+Built for tenants whose landlord's portal forwards to an **Amido "KundPortal"** booking system.
 
 <p align="center">
-  <img src="docs/img/card-desktop.png" width="48%" alt="Desktop view">
-  <img src="docs/img/card-mobile.png" width="22%" alt="Mobile view">
-  <img src="docs/img/card-map.png" width="26%" alt="Map view">
+  <img src="docs/img/demo-book-cancel.gif" width="320" alt="Tap a free time, confirm, it is booked instantly – tap again to cancel">
 </p>
 
 > **⚠️ Unofficial · personal use only.** Not affiliated with any landlord or with Amido. Read
-> [DISCLAIMER.md](DISCLAIMER.md) first. You are responsible for following the terms that apply to you.
+> [DISCLAIMER.md](DISCLAIMER.md) first – you are responsible for following the terms that apply to you.
 > *(Svensk sammanfattning längst ner.)*
+
+## Why this instead of the portal's own page?
+
+| The portal | This card |
+|---|---|
+| Pick an object in a tree → open a calendar → click a tiny cell → answer pop-ups; then wait for the page | **One screen. Tap a time → confirm → done.** |
+| 3–8 s before you know whether it worked | **Instant, optimistic UI** – the slot turns "Yours" immediately and rolls back automatically if the portal says no |
+| Hard to tell icons apart | **Self-explanatory:** green **+ Book**, blue **✓ Yours**, grey **🔒 Taken** – no legend needed |
+| No idea which building is closest | **Nearest building first**, distances, an optional **map** and tap-for-**directions** |
+| Open a browser, log in, navigate… | Lives on your **phone-friendly dashboard**, dark/light theme, Swedish & English |
+| – | **Polite to the portal:** *no background polling at all*, request spacing, caching, back-off, login circuit-breaker |
+| – | **Private & self-hosted:** your login stays in a local `chmod 600` file; no cloud, no telemetry |
+
+## Tour
+
+<table>
+<tr>
+<td align="center" width="33%"><img src="docs/img/demo-filter.gif" width="260" alt="Switch between laundry, sauna and heavy laundry"><br><b>Laundry · sauna · heavy laundry</b><br>one tap, nearest building first</td>
+<td align="center" width="33%"><img src="docs/img/demo-map.gif" width="260" alt="Map with buildings and a directions popup"><br><b>Map &amp; directions</b><br>tap a building number</td>
+<td align="center" width="33%"><img src="docs/img/card-desktop.png" width="260" alt="Desktop layout"><br><b>Desktop &amp; mobile</b><br>aligned grid, same look everywhere</td>
+</tr>
+</table>
+
+*(All screenshots and GIFs are made from the [demo page](docs/demo/index.html) with invented data – regenerate them with
+[`tools/record_gifs.py`](tools/record_gifs.py).)*
 
 ## Features
 

@@ -9,6 +9,10 @@
   .wrap{max-width:1000px;margin:16px auto;padding:0 12px}
   ha-card{display:block;background:var(--card-background-color);border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.4)}
   button{font-family:inherit}
+  ::-webkit-scrollbar{display:none} html{scrollbar-width:none}
+  .ripple{position:fixed;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.28);border:2px solid rgba(255,255,255,.85);
+          transform:translate(-50%,-50%) scale(.35);opacity:1;pointer-events:none;z-index:9999;animation:rip .65s ease-out forwards}
+  @keyframes rip{to{transform:translate(-50%,-50%) scale(1.5);opacity:0}}
 </style></head><body>
 <div class="wrap" id="wrap"></div>
 <script>
@@ -85,4 +89,18 @@ card.hass = hass;
 document.getElementById("wrap").appendChild(card);
 if (params.get("map")) setTimeout(() => card.shadowRoot.querySelector(".mapbtn").click(), 1200);
 if (params.get("pin")) setTimeout(() => [...card.shadowRoot.querySelectorAll(".pin")].find((p) => p.textContent.trim() === params.get("pin"))?.click(), 3500);
+
+// helper used by tools/record_gifs.py: shows a "tap" ripple on an element inside the card, then clicks it
+window.demoTap = async (sel, n = 0, text = null) => {
+  const root = document.querySelector("amido-laundry-card").shadowRoot;
+  let els = [...root.querySelectorAll(sel)];
+  if (text) els = els.filter((e) => e.textContent.trim() === text);
+  const el = els[n]; if (!el) return false;
+  const top = el.getBoundingClientRect().top; if (top < 80 || top > innerHeight - 120) el.scrollIntoView({ block: "center" });
+  await new Promise((r) => setTimeout(r, 150));
+  const b = el.getBoundingClientRect(), d = document.createElement("div");
+  d.className = "ripple"; d.style.left = b.left + b.width / 2 + "px"; d.style.top = b.top + b.height / 2 + "px";
+  document.body.appendChild(d); setTimeout(() => d.remove(), 700);
+  await new Promise((r) => setTimeout(r, 230)); el.click(); return true;
+};
 </script></body></html>
