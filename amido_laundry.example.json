@@ -1,0 +1,5 @@
+{
+  "provider": "rikshem",
+  "min_interval": 1.0,
+  "calendar_ttl": 120
+}

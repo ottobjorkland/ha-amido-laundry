@@ -1,0 +1,11 @@
+# secrets / runtime state - never commit
+amido_credentials.json
+amido_state.json
+amido_cache.json
+amido.lock
+amido_laundry.json
+*.tmp
+# python
+__pycache__/
+.pytest_cache/
+*.pyc

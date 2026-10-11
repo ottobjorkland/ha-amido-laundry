@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>amido-laundry-card – demo (fake data)</title>
+<style>
+  :root { --primary-color:#03a9f4; --text-primary-color:#fff; --primary-text-color:#e1e1e1; --secondary-text-color:#9b9b9b;
+          --card-background-color:#1c1c1c; --secondary-background-color:#282828; --divider-color:rgba(225,225,225,.14);
+          --success-color:#43a047; --error-color:#db4437; --paper-font-body1_-_font-family:Roboto,system-ui,sans-serif; }
+  html,body{margin:0;background:#111;font-family:Roboto,system-ui,sans-serif;color:var(--primary-text-color)}
+  .wrap{max-width:1000px;margin:16px auto;padding:0 12px}
+  ha-card{display:block;background:var(--card-background-color);border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+  button{font-family:inherit}
+</style></head><body>
+<div class="wrap" id="wrap"></div>
+<script>
+// ── tiny stand-ins for Home Assistant's custom elements (demo only) ──────────────────────────
+customElements.define("ha-icon", class extends HTMLElement {
+  static get observedAttributes() { return ["icon"]; }
+  connectedCallback() { this._r(); } attributeChangedCallback() { this._r(); }
+  _r() { const n = (this.getAttribute("icon") || "").replace("mdi:", "");
+    this.style.cssText = `display:inline-block;width:var(--mdc-icon-size,24px);height:var(--mdc-icon-size,24px);background:currentColor;` +
+      `-webkit-mask:url(https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/${n}.svg) center/contain no-repeat;mask:url(https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/svg/${n}.svg) center/contain no-repeat;`; }
+});
+customElements.define("ha-card", class extends HTMLElement {});
+</script>
+<script src="../../dist/amido-laundry-card.js"></script>
+<script>
+// ── fake backend: invented buildings, invented slots, nothing is real ───────────────────────
+const HOME = { lat: 59.3258, lon: 18.0716 };
+const OBJECTS = [
+  { id: "1-1-1", b: "Example Street 1", c: "Laundry", r: "Laundry room 1" }, { id: "1-1-2", b: "Example Street 1", c: "Laundry", r: "Laundry room 2" },
+  { id: "2-1-1", b: "Example Street 2", c: "Laundry", r: "Laundry room 1" }, { id: "2-2-1", b: "Example Street 2", c: "Sauna", r: "Sauna" },
+  { id: "3-1-1", b: "Example Street 3", c: "Heavy laundry", r: "Heavy laundry" }, { id: "3-2-1", b: "Example Street 3", c: "Sauna", r: "Sauna" },
+  { id: "4-1-1", b: "Example Street 4", c: "Laundry", r: "Laundry room 1" },
+];
+const LOCS = { "Example Street 1": { lat: 59.3262, lon: 18.0721 }, "Example Street 2": { lat: 59.3249, lon: 18.0690 },
+               "Example Street 3": { lat: 59.3271, lon: 18.0748 }, "Example Street 4": { lat: 59.3241, lon: 18.0751 } };
+const INTERVALS = [["07:00-10:00", "07–10"], ["10:00-13:00", "10–13"], ["13:00-16:00", "13–16"], ["16:00-19:00", "16–19"], ["19:00-22:00", "19–22"]];
+const DAYS = ["Mån", "Tis", "Ons", "Tors", "Fre", "Lör", "Sön"];
+const mineSet = new Set(["1-1-2|3|4"]);   // object|dayOffset|interval
+function hash(s) { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); }
+function calendar(id) {
+  const today = new Date(), dagar = [];
+  for (let o = 0; o < 14; o++) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + o), p = [];
+    INTERVALS.forEach(([k, t], i) => {
+      if (o === 0 && i < 3) return;
+      const key = `${id}|${o}|${i}`, h = hash(key) % 100;
+      p.push({ i, t, k, s: mineSet.has(key) ? "mine" : h < 22 ? "busy" : "free" });
+    });
+    dagar.push({ d: d.toISOString().slice(0, 10).replace(/(\d+)-(\d+)-(\d+)/, (m, y, mo, da) => `${y}-${mo}-${da}`), wd: DAYS[(d.getDay() + 6) % 7], n: d.getDate(), m: d.getMonth() + 1, p });
+  }
+  return { state: "OK", id, objekt: id, dagar, antal_fria: 1, checked: new Date().toISOString().slice(0, 19).replace("T", " ") };
+}
+function mine() {
+  const lista = [...mineSet].map((k) => { const [id, o, i] = k.split("|"); const ob = OBJECTS.find((x) => x.id === id);
+    const d = new Date(); d.setDate(d.getDate() + +o); const iso = d.toISOString().slice(0, 10);
+    return { id, date: iso, wd: "", n: d.getDate(), m: d.getMonth() + 1, t: INTERVALS[i][1], k: INTERVALS[i][0], b: ob.b, r: ob.r }; });
+  return { state: "OK", antal: lista.length, lista };
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const hass = {
+  states: { "zone.home": { attributes: { latitude: HOME.lat, longitude: HOME.lon } } },
+  async callWS(msg) {
+    await sleep(msg.service === "amido_book" || msg.service === "amido_cancel" ? 900 : 250);
+    let out;
+    switch (msg.service) {
+      case "amido_objects": out = { state: "OK", objekt: OBJECTS }; break;
+      case "amido_calendar": out = calendar(msg.service_data.id); break;
+      case "amido_mybookings": out = mine(); break;
+      case "amido_book": case "amido_cancel": {
+        const { id, date, slot } = msg.service_data, o = Math.round((new Date(date) - new Date(new Date().toISOString().slice(0, 10))) / 864e5);
+        const i = /^\d+$/.test(slot) ? +slot : INTERVALS.findIndex((x) => x[0] === slot), key = `${id}|${o}|${i}`;
+        msg.service === "amido_book" ? mineSet.add(key) : mineSet.delete(key);
+        out = { state: "OK", verified: true }; break; }
+      default: out = { state: "Fel", code: "usage" };
+    }
+    return { response: { stdout: JSON.stringify(out) } };
+  },
+  callService() { return Promise.resolve(); },
+};
+const params = new URLSearchParams(location.search);
+const card = document.createElement("amido-laundry-card");
+card.setConfig({ language: params.get("lang") || "en", default_object: "Example Street 1 · Laundry room 2", locations: LOCS, refresh_minutes: 60 });
+card.hass = hass;
+document.getElementById("wrap").appendChild(card);
+if (params.get("map")) setTimeout(() => card.shadowRoot.querySelector(".mapbtn").click(), 1200);
+if (params.get("pin")) setTimeout(() => [...card.shadowRoot.querySelectorAll(".pin")].find((p) => p.textContent.trim() === params.get("pin"))?.click(), 3500);
+</script></body></html>

@@ -1,0 +1,14 @@
+# Minimal
+type: custom:amido-laundry-card
+
+# Everything below is optional
+# type: custom:amido-laundry-card
+# language: en                   # sv (default) or en
+# default_object: "Example Street 1 · Laundry room 2"   # id, "Building · Room", or part of it
+# refresh_minutes: 3             # only while the card is on screen (min 1)
+# portal_url: "https://example.invalid/your-landlords-booking-page"
+# home: { lat: 59.3262, lon: 18.0711, name: "Home" }      # defaults to zone.home
+# map: true                       # needs `locations`; loads Leaflet + OpenStreetMap tiles when opened
+# locations:                      # building name exactly as shown in the card -> coordinates
+#   "Example Street 1": { lat: 59.3270, lon: 18.0690 }
+#   "Example Street 2": { lat: 59.3251, lon: 18.0732 }

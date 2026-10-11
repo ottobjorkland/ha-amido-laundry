@@ -1,0 +1,11 @@
+# Home Assistant package for ha-amido-laundry
+# Put the script at /config/amido_laundry.py and include this file (see README → Install).
+#
+# These five services are the ONLY thing that talks to the booking portal, and they run
+# only when you open the card (nothing polls in the background).
+shell_command:
+  amido_objects: 'python3 /config/amido_laundry.py objects'
+  amido_calendar: 'python3 /config/amido_laundry.py calendar "{{ id }}" {{ fresh | default("") }}'
+  amido_mybookings: 'python3 /config/amido_laundry.py mybookings'
+  amido_book: 'python3 /config/amido_laundry.py book "{{ id }}" "{{ date }}" "{{ slot }}"'
+  amido_cancel: 'python3 /config/amido_laundry.py cancel "{{ id }}" "{{ date }}" "{{ slot }}"'
